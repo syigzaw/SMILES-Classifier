@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[2]:
+# In[12]:
 
 
 import numpy as np
@@ -21,15 +21,16 @@ from sklearn.model_selection import train_test_split
 df = pd.read_csv("./data.csv")
 
 
-# In[4]:
+# In[18]:
 
 
 smiles = df.iloc[:,0]
 targets = df.iloc[:,1:13]
+targets.fillna(2, inplace=True)
 smiles_train, smiles_test, targets_train, targets_test = train_test_split(smiles, targets, test_size=0.2)
 
 
-# In[6]:
+# In[20]:
 
 
 batch_size = 32
@@ -40,12 +41,13 @@ one_hot_test = tokenizer.texts_to_sequences(smiles_test.values)
 one_hot_train = pad_sequences(one_hot_train, padding='post')
 one_hot_test = pad_sequences(one_hot_test, padding='post')
 model = Sequential()
-model.add(Embedding(len(tokenizer.index_docs) + 1, 50))
+model.add(Embedding(len(tokenizer.index_docs) + 1, 50, input_length=one_hot_train.shape[1]))
 model.add(Conv1D(filters=192, kernel_size=3, strides=1))
 model.add(GRU(units=224, return_sequences=True))
 model.add(GRU(units=384))
 model.add(Dense(12, activation='softmax'))
-model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
+model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
+model.summary()
 model.fit(one_hot_train, targets_train, epochs=100, validation_split=0.2)
 score = model.evaluate(one_hot_test, targets_test)
 print(score)
