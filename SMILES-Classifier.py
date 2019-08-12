@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[24]:
+# In[32]:
 
 
 import numpy as np
@@ -9,7 +9,7 @@ import pandas as pd
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from keras.models import Sequential
-from keras.layers import Embedding, Conv1D, GRU, Dense
+from keras.layers import Embedding, Conv1D, GRU, LSTM, Dense, Activation
 from keras.utils import to_categorical
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
@@ -43,23 +43,24 @@ one_hot_train = pad_sequences(one_hot_train, padding='post')
 one_hot_test = pad_sequences(one_hot_test, padding='post')
 
 
-# In[27]:
+# In[33]:
 
 
 model = Sequential()
 model.add(Embedding(len(tokenizer.index_docs) + 1, 50, input_length=one_hot_train.shape[1]))
-model.add(Conv1D(filters=192, kernel_size=3, strides=1))
-model.add(GRU(units=224, return_sequences=True))
-model.add(GRU(units=384))
-model.add(Dense(12, activation='softmax'))
+model.add(Conv1D(filters=192, kernel_size=5, activation='relu'))
+model.add(LSTM(units=224, return_sequences=True, activation='relu'))
+model.add(LSTM(units=384, activation='relu'))
+model.add(Dense(12))
+model.add(Activation('sigmoid'))
 model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
 model.summary()
-tensorboardCallback = TensorBoard()
 
 
 # In[29]:
 
 
+tensorboardCallback = TensorBoard()
 model.fit(one_hot_train, targets_train, epochs=100, validation_split=0.2, callbacks=[tensorboardCallback])
 score = model.evaluate(one_hot_test, targets_test)
 print(score)
